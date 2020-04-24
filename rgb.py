@@ -40,12 +40,12 @@ def readRGBImageFromPath(path, writeDir):
     cv2.imwrite(writePath, data)
 
 
-def readRGBFromDirectory(dirpath):
+def readRGBFromDirectory(dirpath, outputPath):
     for filename in os.listdir(dirpath):
         if filename.endswith(".rgb"):
             imgPath = os.path.join(dirpath, filename)
-            readRGBImageFromPath(imgPath, "images")
+            readRGBImageFromPath(imgPath, outputPath)
 
 
 if __name__ == '__main__':
-    readRGBFromDirectory(sys.argv[1])
+    readRGBFromDirectory(sys.argv[1], sys.argv[2])
