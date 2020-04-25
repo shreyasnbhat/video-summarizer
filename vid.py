@@ -6,11 +6,28 @@ from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
                              QPushButton, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget, QLineEdit)
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction
-from PyQt5.QtGui import QIcon, QPixmap
-
+from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5.QtCore import pyqtSlot
 import sys
+from generateImage import VideoMetaData,ImageMetaData
 
+METADATA = []
+META_FILE_PATH = "metadata.csv"
+
+def loadMetData():
+    f = open(META_FILE_PATH, "r")
+    lines = f.readlines()
+
+    for line in lines:
+        data = line.split(',')
+        if data[0] == "IMG":
+            meta = ImageMetaData(data[1][:-1])
+        else:
+            path = data[1]
+            frameNum = int(data[2])
+            timeStamp = int(float(data[3][:-1]))
+            meta = VideoMetaData(path, frameNum, timeStamp)
+        METADATA.append(meta)
 
 class FrameCounterWidget(QLabel):
 
@@ -60,9 +77,13 @@ class VideoWindow(QMainWindow):
         self.positionSlider.sliderMoved.connect(self.setPosition)
 
         # Create the Image Widget
-        self.imageWidget = QPixmap("./images/image-0001.jpg")
+        self.sumImage = QImage("./Processing/images/finalImage.png")
+        self.sumImage = self.sumImage.scaled(700, 300, aspectRatioMode=Qt.KeepAspectRatio,
+                                             transformMode=Qt.SmoothTransformation)
+        self.imageWidget = QPixmap.fromImage(self.sumImage)
         self.imageLabel = QLabel()
         self.imageLabel.setPixmap(self.imageWidget)
+        self.imageLabel.mousePressEvent = self.getPos
 
         self.errorLabel = QLabel()
         self.errorLabel.setSizePolicy(QSizePolicy.Preferred,
@@ -113,10 +134,40 @@ class VideoWindow(QMainWindow):
         self.mediaPlayer.durationChanged.connect(self.durationChanged)
         self.mediaPlayer.error.connect(self.handleError)
 
+    def getPos(self, event):
+        print("Mouse Click")
+        x = event.pos().x()
+        y = event.pos().y()
+
+        labelW = self.imageLabel.width()
+        labelH = self.imageLabel.height()
+
+        smallImgW = labelW / 27
+        imgIndex = int(x // smallImgW)
+
+        metaFile = METADATA[imgIndex]
+
+        self.mediaPlayer.setMedia(
+            QMediaContent(QUrl.fromLocalFile(metaFile.path)))
+        self.playButton.setEnabled(True)
+
+        if type(metaFile) == VideoMetaData:
+            self.mediaPlayer.setPosition(int(metaFile.timeStamp))
+        self.play()
+
+        print("Image Pointer:", imgIndex)
+
+    def resizeEvent(self, event):
+        self.sumImage = self.sumImage = self.sumImage.scaled(1600, 900, aspectRatioMode=Qt.KeepAspectRatio)
+        self.imageWidget = QPixmap(self.sumImage)
+        self.imageLabel.setPixmap(self.imageWidget)
+        QMainWindow.resizeEvent(self, event)
+
     def openFile(self):
         fileName, _ = QFileDialog.getOpenFileName(self, "Open Movie",
                                                   QDir.homePath())
 
+        print(fileName)
         if fileName != '':
             fileURL = QUrl.fromLocalFile(fileName)
             self.mediaPlayer.setMedia(
@@ -166,6 +217,7 @@ class VideoWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    loadMetData()
     app = QApplication(sys.argv)
     player = VideoWindow()
     player.resize(640, 480)

@@ -22,7 +22,6 @@ class VideoMetaData:
         f.write(content)
         f.close()
 
-
 class ImageMetaData:
     def __init__(self, path):
         self.path = path
