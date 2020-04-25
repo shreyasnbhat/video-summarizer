@@ -4,9 +4,11 @@ import numpy as np
 from pyCAIR import cropByColumn
 import sys
 import os
+from collections import defaultdict
 
 METADATA_FILE = "metadata.csv"
 
+META_MAP = defaultdict(list)
 
 class VideoMetaData:
     def __init__(self, path, frameNumber, timeStamp):
@@ -42,7 +44,8 @@ def processVideoMetaData(metapath, videoSourcePath):
         path = videoSourcePath
         contents = res[i].split(',')
         vidMeta = VideoMetaData(path, contents[1], contents[3])
-        vidMeta.write(METADATA_FILE)
+        videoTitle = path.split('/')[-1].split('.')[0]
+        META_MAP[videoTitle].append(vidMeta)
 
     f.close()
 
@@ -86,6 +89,10 @@ def mergeImages(pathImage):
             if not isVideo(imgPath):
                 imageMetaData = ImageMetaData(imgPath)
                 imageMetaData.write(METADATA_FILE)
+            else:
+                videoTitle = imgPath.split('/')[-1][10:].split('.')[0]
+                for i in META_MAP[videoTitle]:
+                    i.write(METADATA_FILE)
 
             img = cv2.imread(imgPath)
             if finalImage is None:
