@@ -6,13 +6,15 @@ from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
                              QPushButton, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget, QLineEdit)
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction
-from PyQt5.QtGui import QIcon, QPixmap, QImage
+from PyQt5.QtGui import QIcon, QPixmap, QImage, QGuiApplication
 from PyQt5.QtCore import pyqtSlot
 import sys
-from generateImage import VideoMetaData,ImageMetaData
+from metadata import *
+from hist import CLUSTERS
 
 METADATA = []
-META_FILE_PATH = "metadata.csv"
+META_FILE_PATH = "meta.csv"
+
 
 def loadMetData():
     f = open(META_FILE_PATH, "r")
@@ -28,6 +30,7 @@ def loadMetData():
             timeStamp = int(float(data[3][:-1]))
             meta = VideoMetaData(path, frameNum, timeStamp)
         METADATA.append(meta)
+
 
 class FrameCounterWidget(QLabel):
 
@@ -77,8 +80,8 @@ class VideoWindow(QMainWindow):
         self.positionSlider.sliderMoved.connect(self.setPosition)
 
         # Create the Image Widget
-        self.sumImage = QImage("./Processing/images/finalImage.png")
-        self.sumImage = self.sumImage.scaled(700, 300, aspectRatioMode=Qt.KeepAspectRatio,
+        self.sumImage = QImage("S99/images/b99_summary.jpg")
+        self.sumImage = self.sumImage.scaled(1400, 600, aspectRatioMode=Qt.KeepAspectRatio,
                                              transformMode=Qt.SmoothTransformation)
         self.imageWidget = QPixmap.fromImage(self.sumImage)
         self.imageLabel = QLabel()
@@ -142,10 +145,21 @@ class VideoWindow(QMainWindow):
         labelW = self.imageLabel.width()
         labelH = self.imageLabel.height()
 
-        smallImgW = labelW / 27
-        imgIndex = int(x // smallImgW)
+        print(labelW, labelH)
 
-        metaFile = METADATA[imgIndex]
+        smallImgW = labelW / (CLUSTERS / 2)
+        smallImgH = labelH / 2
+
+        imgIdxX = int(x // smallImgW)
+        imgIdxY = int(y // smallImgH)
+
+        idx = (CLUSTERS // 2) * imgIdxY + imgIdxX
+
+        print(idx)
+
+        metaFile = METADATA[idx]
+
+        print(metaFile.path, metaFile.timeStamp)
 
         self.mediaPlayer.setMedia(
             QMediaContent(QUrl.fromLocalFile(metaFile.path)))
@@ -155,7 +169,7 @@ class VideoWindow(QMainWindow):
             self.mediaPlayer.setPosition(int(metaFile.timeStamp))
         self.play()
 
-        print("Image Pointer:", imgIndex)
+        print("Image Pointer:", idx)
 
     def resizeEvent(self, event):
         self.sumImage = self.sumImage = self.sumImage.scaled(1600, 900, aspectRatioMode=Qt.KeepAspectRatio)

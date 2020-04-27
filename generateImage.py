@@ -5,34 +5,11 @@ from pyCAIR import cropByColumn
 import sys
 import os
 from collections import defaultdict
+from .metadata import *
 
 METADATA_FILE = "metadata.csv"
 
 META_MAP = defaultdict(list)
-
-class VideoMetaData:
-    def __init__(self, path, frameNumber, timeStamp):
-        self.path = path
-        self.frameNumber = frameNumber
-        self.timeStamp = timeStamp
-
-    def write(self, path):
-        f = open(path, "a+")
-        content = "VID," + self.path + "," + self.frameNumber + "," + str(float(self.timeStamp) * 1000) + "\n"
-        f.write(content)
-        f.close()
-
-class ImageMetaData:
-    def __init__(self, path):
-        self.path = path
-
-    # Ideally a csv
-    def write(self, path):
-        f = open(path, "a+")
-        content = "IMG," + self.path + "\n"
-        f.write(content)
-        f.close()
-
 
 # Stores Metadata of First Frame of each scene
 def processVideoMetaData(metapath, videoSourcePath):

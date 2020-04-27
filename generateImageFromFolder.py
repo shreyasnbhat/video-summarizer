@@ -60,6 +60,8 @@ def genImageFromFolder(inputFolder, outputFolder='Processing'):
 
 
 if __name__ == '__main__':
+    os.remove("metadata.csv")
+
     if len(sys.argv) == 3:
         genImageFromFolder(sys.argv[1], sys.argv[2])
     elif len(sys.argv) == 2:
