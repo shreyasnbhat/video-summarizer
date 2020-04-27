@@ -10,15 +10,26 @@ from PyQt5.QtGui import QIcon, QPixmap, QImage, QGuiApplication
 from PyQt5.QtCore import pyqtSlot
 import sys
 from metadata import *
-from hist import CLUSTERS
 
 METADATA = []
+CLUSTERS = 40
 META_FILE_PATH = "meta.csv"
+CLUSTER_PATH = "clusters.txt"
 
 
 def loadMetData():
     f = open(META_FILE_PATH, "r")
     lines = f.readlines()
+    f.close()
+
+    global CLUSTERS
+
+    f = open(CLUSTER_PATH, "r")
+    line = f.readlines()
+    CLUSTERS = int(line[0])
+
+    print(CLUSTERS)
+    f.close()
 
     for line in lines:
         data = line.split(',')
@@ -48,7 +59,7 @@ class FrameCounterWidget(QLabel):
 class VideoWindow(QMainWindow):
     filePath = None
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, summaryImgPath=None):
         super(VideoWindow, self).__init__(parent)
         self.setWindowTitle("Video Summarizer")
 
@@ -61,26 +72,13 @@ class VideoWindow(QMainWindow):
         self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         self.playButton.clicked.connect(self.play)
 
-        # To get frame number!
-        self.frameCounter = FrameCounterWidget()
-
-        self.probe = QVideoProbe()
-        self.probe.videoFrameProbed.connect(self.frameCounter.processFrame)
-        self.probe.setSource(self.mediaPlayer)
-
-        # Frame input Text Box
-        self.frameTextWidget = QLineEdit()
-        self.frameTextWidget.setMaxLength(10)
-        self.frameTextWidget.setPlaceholderText("Enter your text")
-        self.frameTextWidget.returnPressed.connect(self.return_pressed)
-
         # Position slider
         self.positionSlider = QSlider(Qt.Horizontal)
         self.positionSlider.setRange(0, 0)
         self.positionSlider.sliderMoved.connect(self.setPosition)
 
         # Create the Image Widget
-        self.sumImage = QImage("S99/images/b99_summary.jpg")
+        self.sumImage = QImage(summaryImgPath)
         self.sumImage = self.sumImage.scaled(1400, 600, aspectRatioMode=Qt.KeepAspectRatio,
                                              transformMode=Qt.SmoothTransformation)
         self.imageWidget = QPixmap.fromImage(self.sumImage)
@@ -118,8 +116,6 @@ class VideoWindow(QMainWindow):
         controlLayout = QHBoxLayout()
         controlLayout.setContentsMargins(0, 0, 0, 0)
         controlLayout.addWidget(self.playButton)
-        controlLayout.addWidget(self.frameCounter)
-        controlLayout.addWidget(self.frameTextWidget)
         controlLayout.addWidget(self.positionSlider)
 
         layout = QVBoxLayout()
@@ -213,15 +209,6 @@ class VideoWindow(QMainWindow):
         print(duration / 1000 / 60, "minutes")
         self.positionSlider.setRange(0, duration)
 
-    def return_pressed(self):
-        print("Return pressed!")
-        frameToSeek = self.frameTextWidget.text()
-        print(self.mediaPlayer.duration())
-        print(self.mediaPlayer.metaData('VideoFrameRate'))
-        self.positionSlider.setValue(int(frameToSeek))
-        self.mediaPlayer.setPosition(int(frameToSeek))
-        self.mediaPlayer.play()
-
     def setPosition(self, position):
         self.mediaPlayer.setPosition(position)
 
@@ -231,9 +218,11 @@ class VideoWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    summaryImgPath = sys.argv[1]
+
     loadMetData()
     app = QApplication(sys.argv)
-    player = VideoWindow()
+    player = VideoWindow(None, summaryImgPath)
     player.resize(640, 480)
     player.show()
     sys.exit(app.exec_())

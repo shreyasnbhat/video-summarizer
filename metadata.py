@@ -54,7 +54,7 @@ def getSceneMetaDataFromImage(metapath, vidSrcPath, imagePath):
 
             mFrame = (sFrame + eFrame) // 2
             midFrameCnt = math.ceil((eFrame - sFrame) / 2)
-            mTime = sTime + (midFrameCnt - 5) / fps
+            mTime = sTime + (midFrameCnt + 3) / fps
 
             print(sTime, mTime, (sTime + eTime) / 2, eTime)
 

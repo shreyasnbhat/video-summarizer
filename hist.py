@@ -8,58 +8,21 @@ from scenesfromvideo import runSceneDetection
 from metadata import *
 
 METAPATH = "meta.csv"
-CLUSTERS = 34
+CLUSTERS = 40
 
 
 def genScenes(videoPath, outputScenePath):
     runSceneDetection(videoPath, outputScenePath)
 
 
-# basedir holds all summary video frames
-def summaryFromHistogram(basedir, summaryImageOutputPath, vidInputPath, sceneMetaPath):
-    histData = []
-    paths = []
-    metadata = []
-
-    extensions = [".jpg", ".png"]
-
-    for path in os.listdir(basedir):
-        ext = os.path.splitext(path)[-1].lower()
-        if ext in extensions:
-            fpath = os.path.join(basedir, path)
-
-            #print("Getting metadata for", fpath)
-            vidMeta = getSceneMetaDataFromImage(sceneMetaPath, vidInputPath, fpath)
-
-            img = cv2.imread(fpath, 0)
-            hist = cv2.calcHist([img], [0], None, [256], [0, 256]).ravel()
-            hist = hist.transpose()
-            histData.append(hist)
-            paths.append(fpath)
-            metadata.append(vidMeta)
-
-    histData = np.array(histData)
-
-    print("Clustering...")
-    km = KMeans(n_clusters=CLUSTERS).fit(histData)
-
-    closest, _ = pairwise_distances_argmin_min(km.cluster_centers_, histData)
-
-    respaths = []
-    resmeta = []
-    for i in closest:
-        respaths.append(paths[i])
-        resmeta.append(metadata[i])
-
-    respaths, resmeta = (list(t) for t in zip(*sorted(zip(respaths, resmeta))))
-
+def generateSummary(respaths, resmeta, summaryImageOutputPath):
     for i in resmeta:
         i.write(METAPATH)
 
     finalImage = None
     for i in range(CLUSTERS // 2):
         img1 = cv2.imread(respaths[i])
-        img2 = cv2.imread(respaths[CLUSTERS//2 + i])
+        img2 = cv2.imread(respaths[CLUSTERS // 2 + i])
 
         width = 352
         height = 288
@@ -79,6 +42,59 @@ def summaryFromHistogram(basedir, summaryImageOutputPath, vidInputPath, sceneMet
 
     print("Generating final image in", summaryImageOutputPath)
     cv2.imwrite(summaryImageOutputPath, finalImage)
+
+
+# basedir holds all summary video frames
+def summaryFromHistogram(basedir, summaryImageOutputPath, vidInputPath, sceneMetaPath):
+    histData = []
+    paths = []
+    metadata = []
+
+    extensions = [".jpg", ".png"]
+
+    dataPoints = 0
+
+    for path in os.listdir(basedir):
+        ext = os.path.splitext(path)[-1].lower()
+        if ext in extensions:
+            fpath = os.path.join(basedir, path)
+
+            vidMeta = getSceneMetaDataFromImage(sceneMetaPath, vidInputPath, fpath)
+
+            img = cv2.imread(fpath, 0)
+            hist = cv2.calcHist([img], [0], None, [256], [0, 256]).ravel()
+            hist = hist.transpose()
+            histData.append(hist)
+            paths.append(fpath)
+            metadata.append(vidMeta)
+
+            dataPoints += 1
+
+    histData = np.array(histData)
+
+    global CLUSTERS
+
+    if dataPoints < CLUSTERS:
+        CLUSTERS = (dataPoints // 2) * 2
+
+    # write CLUSTERS to cluster file
+    f = open("clusters.txt", "w")
+    f.write(str(CLUSTERS))
+    f.close()
+
+    print("Clustering...")
+    km = KMeans(n_clusters=CLUSTERS).fit(histData)
+
+    closest, _ = pairwise_distances_argmin_min(km.cluster_centers_, histData)
+
+    respaths = []
+    resmeta = []
+    for i in closest:
+        respaths.append(paths[i])
+        resmeta.append(metadata[i])
+
+    respaths, resmeta = (list(t) for t in zip(*sorted(zip(respaths, resmeta))))
+    generateSummary(respaths, resmeta, summaryImageOutputPath)
 
 
 def summaryFromHistogramFolder(inputPath, outputPath):
@@ -102,7 +118,7 @@ def summaryFromHistogramFolder(inputPath, outputPath):
             resultImagePath = summaryOutputDir + "/" + resultImageName
 
             vidInputPath = os.path.join(os.getcwd(), inputPath, path)
-            #genScenes(vidInputPath, videoOutputSceneDir)
+            # genScenes(vidInputPath, videoOutputSceneDir)
 
             sceneMetaFile = vidTitle + "-Scenes.csv"
             sceneMetaPath = os.path.join(videoOutputSceneDir, sceneMetaFile)
@@ -113,6 +129,9 @@ def summaryFromHistogramFolder(inputPath, outputPath):
 if __name__ == '__main__':
     inputPath = sys.argv[1]
     outputPath = sys.argv[2]
+
+    # delete metadata file
+    os.remove("meta.csv")
 
     # Creat processing directories
     if not os.path.exists(outputPath):
