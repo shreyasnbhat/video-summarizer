@@ -5,7 +5,7 @@ import os
 def runSceneDetection(inputPath, outputPath="scenes/"):
     print("Running Scene Detect for", inputPath)
     os.system(
-        "scenedetect --input " + inputPath + " --output " + outputPath + " detect-content list-scenes save-images -n 1 > /dev/null 2>&1")
+        "scenedetect --input " + inputPath + " --output " + outputPath + " detect-content list-scenes")
 
 
 if __name__ == '__main__':
