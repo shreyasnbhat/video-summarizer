@@ -83,14 +83,7 @@ class VideoWindow(QMainWindow):
         imgW = self.sumImage.width()
         imgH = self.sumImage.height()
 
-        if imgW < 600:
-            resW = imgW
-            resH = imgH
-        else:
-            resW = 600
-            resH = 490
-
-        self.sumImage = self.sumImage.scaledToHeight(resH)
+        self.sumImage = self.sumImage.scaledToHeight(min(imgH, 200))
         self.imageWidget = QPixmap.fromImage(self.sumImage)
 
         print(self.imageWidget.height())
@@ -151,6 +144,8 @@ class VideoWindow(QMainWindow):
         self.mediaPlayer.durationChanged.connect(self.durationChanged)
         self.mediaPlayer.error.connect(self.handleError)
 
+        self.setWindowTitle("CS576 Video Summarizer")
+
     def getPos(self, event):
         print("Mouse Click")
         x = event.pos().x()
@@ -188,9 +183,9 @@ class VideoWindow(QMainWindow):
         print("Image Pointer:", idx)
 
     def resizeEvent(self, event):
-        #self.sumImage = self.sumImage = self.sumImage.scaled(1600, 900, aspectRatioMode=Qt.KeepAspectRatio)
-        #self.imageWidget = QPixmap(self.sumImage)
-        #self.imageLabel.setPixmap(self.imageWidget)
+        # self.sumImage = self.sumImage = self.sumImage.scaled(1600, 900, aspectRatioMode=Qt.KeepAspectRatio)
+        # self.imageWidget = QPixmap(self.sumImage)
+        # self.imageLabel.setPixmap(self.imageWidget)
         QMainWindow.resizeEvent(self, event)
 
     def openFile(self):

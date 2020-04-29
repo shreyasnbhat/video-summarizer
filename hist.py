@@ -56,6 +56,8 @@ def summaryFromHistogram(basedir, summaryImageOutputPath, vidInputPath, sceneMet
 
     dataPoints = 0
 
+    print(basedir, summaryImageOutputPath, vidInputPath, sceneMetaPath)
+
     for path in os.listdir(basedir):
         ext = os.path.splitext(path)[-1].lower()
         if ext in extensions:
@@ -85,6 +87,7 @@ def summaryFromHistogram(basedir, summaryImageOutputPath, vidInputPath, sceneMet
     f.close()
 
     print("Clustering...")
+    print(histData.shape)
     km = KMeans(n_clusters=CLUSTERS).fit(histData)
 
     closest, _ = pairwise_distances_argmin_min(km.cluster_centers_, histData)
@@ -132,6 +135,10 @@ if __name__ == '__main__':
 
     if os.path.exists("meta.csv"):
         os.remove("meta.csv")
+
+    if os.path.exists("clusters.txt"):
+        os.remove("clusters.txt")
+
 
     # Creat processing directories
     if not os.path.exists(outputPath):
