@@ -24,8 +24,10 @@ def generateSummary(respaths, resmeta, summaryImageOutputPath):
         img1 = cv2.imread(respaths[i])
         img2 = cv2.imread(respaths[CLUSTERS // 2 + i])
 
-        width = 352
-        height = 288
+        scale = 0.4
+
+        width = int(352 * scale)
+        height = int(288 * scale)
         dim = (width, height)
 
         # resize image
@@ -98,32 +100,28 @@ def summaryFromHistogram(basedir, summaryImageOutputPath, vidInputPath, sceneMet
 
 
 def summaryFromHistogramFolder(inputPath, outputPath):
-    extensions = [".avi", ".mkv"]
-
     # mkdir summary image output path
     summaryOutputDir = os.path.join(outputPath, "images")
     if not os.path.exists(summaryOutputDir):
         os.mkdir(summaryOutputDir)
 
-    for path in os.listdir(inputPath):
-        ext = os.path.splitext(path)[-1].lower()
-        vidTitle = os.path.splitext(path)[0]
+    # stores video names, as directory name is video name
+    dirs = [i for i in os.listdir(inputPath) if os.path.isdir(os.path.join(inputPath, i))]
 
-        if ext in extensions:
-            videoOutputSceneDir = os.path.join(outputPath, vidTitle)
-            if not os.path.exists(videoOutputSceneDir):
-                os.mkdir(videoOutputSceneDir)
+    for dir in dirs:
+        # all input paths
+        vidTitle = dir
+        metaPath = os.path.join(os.getcwd(), inputPath, vidTitle + "-Scenes.csv")
+        inputVideoPath = os.path.join(os.getcwd(), inputPath, vidTitle + ".mp4")
+        videoSmoothFrameDir = os.path.join(os.getcwd(), inputPath, vidTitle)
 
-            resultImageName = vidTitle + "_summary.jpg"
-            resultImagePath = summaryOutputDir + "/" + resultImageName
+        print(metaPath, inputVideoPath, videoSmoothFrameDir)
 
-            vidInputPath = os.path.join(os.getcwd(), inputPath, path)
-            # genScenes(vidInputPath, videoOutputSceneDir)
+        # all output paths
+        resultImageName = vidTitle + "_summary.jpg"
+        resultImagePath = os.path.join(os.getcwd(), summaryOutputDir, resultImageName)
 
-            sceneMetaFile = vidTitle + "-Scenes.csv"
-            sceneMetaPath = os.path.join(videoOutputSceneDir, sceneMetaFile)
-
-            summaryFromHistogram(videoOutputSceneDir, resultImagePath, vidInputPath, sceneMetaPath)
+        summaryFromHistogram(videoSmoothFrameDir, resultImagePath, inputVideoPath, metaPath)
 
 
 if __name__ == '__main__':
@@ -131,7 +129,9 @@ if __name__ == '__main__':
     outputPath = sys.argv[2]
 
     # delete metadata file
-    os.remove("meta.csv")
+
+    if os.path.exists("meta.csv"):
+        os.remove("meta.csv")
 
     # Creat processing directories
     if not os.path.exists(outputPath):

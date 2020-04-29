@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
                              QPushButton, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget, QLineEdit)
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction
 from PyQt5.QtGui import QIcon, QPixmap, QImage, QGuiApplication
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QRect
 import sys
 from metadata import *
 
@@ -79,9 +79,22 @@ class VideoWindow(QMainWindow):
 
         # Create the Image Widget
         self.sumImage = QImage(summaryImgPath)
-        self.sumImage = self.sumImage.scaled(1400, 600, aspectRatioMode=Qt.KeepAspectRatio,
-                                             transformMode=Qt.SmoothTransformation)
+
+        imgW = self.sumImage.width()
+        imgH = self.sumImage.height()
+
+        if imgW < 600:
+            resW = imgW
+            resH = imgH
+        else:
+            resW = 600
+            resH = 490
+
+        self.sumImage = self.sumImage.scaledToHeight(resH)
         self.imageWidget = QPixmap.fromImage(self.sumImage)
+
+        print(self.imageWidget.height())
+
         self.imageLabel = QLabel()
         self.imageLabel.setPixmap(self.imageWidget)
         self.imageLabel.mousePressEvent = self.getPos
@@ -119,9 +132,14 @@ class VideoWindow(QMainWindow):
         controlLayout.addWidget(self.positionSlider)
 
         layout = QVBoxLayout()
+
+        hLayout = QHBoxLayout()
+        hLayout.addWidget(self.imageLabel)
+        hLayout.setAlignment(Qt.AlignCenter)
+
         layout.addWidget(videoWidget)
         layout.addLayout(controlLayout)
-        layout.addWidget(self.imageLabel)
+        layout.addLayout(hLayout)
         layout.addWidget(self.errorLabel)
 
         # Set widget to contain window contents
@@ -140,6 +158,8 @@ class VideoWindow(QMainWindow):
 
         labelW = self.imageLabel.width()
         labelH = self.imageLabel.height()
+
+        print(self.imageLabel.geometry())
 
         print(labelW, labelH)
 
@@ -168,9 +188,9 @@ class VideoWindow(QMainWindow):
         print("Image Pointer:", idx)
 
     def resizeEvent(self, event):
-        self.sumImage = self.sumImage = self.sumImage.scaled(1600, 900, aspectRatioMode=Qt.KeepAspectRatio)
-        self.imageWidget = QPixmap(self.sumImage)
-        self.imageLabel.setPixmap(self.imageWidget)
+        #self.sumImage = self.sumImage = self.sumImage.scaled(1600, 900, aspectRatioMode=Qt.KeepAspectRatio)
+        #self.imageWidget = QPixmap(self.sumImage)
+        #self.imageLabel.setPixmap(self.imageWidget)
         QMainWindow.resizeEvent(self, event)
 
     def openFile(self):

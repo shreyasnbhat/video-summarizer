@@ -17,6 +17,7 @@ class ImageMetaData:
     def __init__(self, path):
         self.path = path
 
+
     # Ideally a csv
     def write(self, path):
         f = open(path, "a+")
@@ -33,39 +34,22 @@ def getSceneMetaDataFromImage(metapath, vidSrcPath, imagePath):
     res = f.readlines()
 
     temp = imagePath.split('.')[-2].split('-')
-    sceneNumber = int(temp[-2])
-    sceneFrameNumber = int(temp[-1])
+    frameNumber = int(temp[-1])
 
     vidMeta = None
 
-    for i in range(2, len(res)):
+    for i in range(1, len(res)):
         sceneContent = res[i].split(',')
+        frameNo = int(sceneContent[1])
 
-        sceneNo = int(sceneContent[0])
-
-        if sceneNo == sceneNumber:
-            sFrame = int(sceneContent[1])
-            sTime = float(sceneContent[3])
-
-            eFrame = int(sceneContent[4])
-            eTime = float(sceneContent[6])
-
-            fps = (eFrame - sFrame) / (eTime - sTime)
-
-            mFrame = (sFrame + eFrame) // 2
-            midFrameCnt = math.ceil((eFrame - sFrame) / 2)
-            mTime = sTime + (midFrameCnt + 3) / fps
-
-            print(sTime, mTime, (sTime + eTime) / 2, eTime)
-
+        if frameNumber == frameNo:
+            fTime = float(sceneContent[3])
             path = vidSrcPath
-
-            if sceneFrameNumber == 1:
-                vidMeta = VideoMetaData(path, str(sFrame), sTime)
-            elif sceneFrameNumber == 2:
-                vidMeta = VideoMetaData(path, str(mFrame), mTime)
-            elif sceneFrameNumber == 3:
-                vidMeta = VideoMetaData(path, str(eFrame), eTime)
+            vidMeta = VideoMetaData(path, str(frameNumber), fTime)
 
     f.close()
+
+    if vidMeta is not None:
+        print("Metadata for", imagePath, "was generated!")
+
     return vidMeta
