@@ -58,7 +58,7 @@ def findSmoothFramesInVideo(csvFilePath, frameFolder, outputFolder):
                     grayToCompare = cv2.cvtColor(imgToCompare, cv2.COLOR_BGR2GRAY)
                     score += compare_ssim(gray, grayToCompare, full=True)[0]
             score /= 10
-            if score > min_score:
+            if score > min_score+0.1:
                 min_score = score
                 min_file = listOfFrames[i]
                 min_i = i
