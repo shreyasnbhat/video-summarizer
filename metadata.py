@@ -30,6 +30,11 @@ class ImageMetaData:
 # vidSrcPath : Path to video source
 # imagePath : Path to scene jpg
 def getSceneMetaDataFromImage(metapath, vidSrcPath, imagePath):
+    if vidSrcPath is None:
+        print("Metadata for", imagePath, "was generated!")
+        imgMeta = ImageMetaData(imagePath)
+        return imgMeta
+
     f = open(metapath, "r")
     res = f.readlines()
 

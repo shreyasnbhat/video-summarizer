@@ -83,7 +83,7 @@ class VideoWindow(QMainWindow):
         imgW = self.sumImage.width()
         imgH = self.sumImage.height()
 
-        self.sumImage = self.sumImage.scaledToHeight(min(imgH, 200))
+        self.sumImage = self.sumImage.scaledToHeight(min(imgH, 175))
         self.imageWidget = QPixmap.fromImage(self.sumImage)
 
         print(self.imageWidget.height())
@@ -154,8 +154,6 @@ class VideoWindow(QMainWindow):
         labelW = self.imageLabel.width()
         labelH = self.imageLabel.height()
 
-        print(self.imageLabel.geometry())
-
         print(labelW, labelH)
 
         smallImgW = labelW / (CLUSTERS / 2)
@@ -166,11 +164,7 @@ class VideoWindow(QMainWindow):
 
         idx = (CLUSTERS // 2) * imgIdxY + imgIdxX
 
-        print(idx)
-
         metaFile = METADATA[idx]
-
-        print(metaFile.path, metaFile.timeStamp)
 
         self.mediaPlayer.setMedia(
             QMediaContent(QUrl.fromLocalFile(metaFile.path)))
