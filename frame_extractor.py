@@ -72,8 +72,8 @@ def findSmoothFramesInVideo(csvFilePath, frameFolder, outputFolder):
                 file = listOfFrames[scores[i][0]]
                 img = cv2.imread(frameFolder + '/' + file)
                 cv2.imwrite(outputFolder + '/' + file, img)
-                t = getTime(i+1)
-                finalData = finalData.append(pd.DataFrame([[i+1, t, (i+1) / 30]], columns=["frame", "time", "timeinseconds"]),
+                t = getTime(scores[i][0]+1)
+                finalData = finalData.append(pd.DataFrame([[scores[i][0]+1, t, (scores[i][0]+1) / 30]], columns=["frame", "time", "timeinseconds"]),
                                      ignore_index=True)
                 i+=30
             else:
