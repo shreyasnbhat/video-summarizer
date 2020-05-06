@@ -47,8 +47,10 @@ def findSmoothFramesInVideo(csvFilePath, frameFolder, outputFolder):
         min_i = -1
         start = int(df[j].split(',')[1])
         end = int(df[j].split(',')[4])
+        scores = []
         for i in range(start + 5, end - 5):
-            print(i)
+            if i%10==0:
+                print(i)
             img = cv2.imread(frameFolder + "/" + listOfFrames[i])
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             score = 0
@@ -58,17 +60,25 @@ def findSmoothFramesInVideo(csvFilePath, frameFolder, outputFolder):
                     grayToCompare = cv2.cvtColor(imgToCompare, cv2.COLOR_BGR2GRAY)
                     score += compare_ssim(gray, grayToCompare, full=True)[0]
             score /= 10
+            scores.append([i,score])
             if score > min_score+0.1:
                 min_score = score
                 min_file = listOfFrames[i]
                 min_i = i
-        min_i += 1
-        img = cv2.imread(frameFolder + '/' + min_file)
-        cv2.imwrite(outputFolder + '/' + min_file, img)
-        t = getTime(min_i)
-        print(min_i, t)
-        finalData = finalData.append(pd.DataFrame([[min_i, t, min_i / 30]], columns=["frame", "time", "timeinseconds"]),
+        i=0
+        while i<int(0.7*len(scores)):
+            if scores[i][1]>min_score-0.05:
+                print(scores[i][0],scores[i][1])
+                file = listOfFrames[scores[i][0]]
+                img = cv2.imread(frameFolder + '/' + file)
+                cv2.imwrite(outputFolder + '/' + file, img)
+                t = getTime(i+1)
+                finalData = finalData.append(pd.DataFrame([[i+1, t, (i+1) / 30]], columns=["frame", "time", "timeinseconds"]),
                                      ignore_index=True)
+                i+=30
+            else:
+            	i+=1
+        print(min_i,min_score, t)        
     finalData.to_csv(outputFolder + '/' + csvFilePath.split('/')[-1])
 
 
