@@ -10,7 +10,7 @@ from math import ceil
 
 METAPATH = "meta.csv"
 
-TARGET_CLUSTERS = 40
+TARGET_CLUSTERS = 22
 
 
 def generateSummary(respaths, resmeta, summaryImageOutputPath):
@@ -185,6 +185,8 @@ def summaryHistogramAllFolder(inputPath, outputPath):
         else:
             # potentially alter this, to reduce image importance.
             vidClusterCnt["img"] += 1
+
+    print(vidClusterCnt)
 
     # compute target cluster count
     summation = 0

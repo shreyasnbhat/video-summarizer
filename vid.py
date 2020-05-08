@@ -3,9 +3,9 @@
 from PyQt5.QtCore import QDir, Qt, QUrl
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer, QVideoFrame, QVideoProbe
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel, QGridLayout,
                              QPushButton, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget, QLineEdit)
-from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction
+from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction, QStackedWidget
 from PyQt5.QtGui import QIcon, QPixmap, QImage, QGuiApplication
 from PyQt5.QtCore import pyqtSlot, QRect
 import sys
@@ -66,6 +66,7 @@ class VideoWindow(QMainWindow):
         self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
 
         videoWidget = QVideoWidget()
+        videoWidget.setFixedSize(880, 720)
 
         self.playButton = QPushButton()
         self.playButton.setEnabled(False)
@@ -125,12 +126,22 @@ class VideoWindow(QMainWindow):
         controlLayout.addWidget(self.positionSlider)
 
         layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(self.imageLabel)
         hLayout.setAlignment(Qt.AlignCenter)
 
-        layout.addWidget(videoWidget)
+        self.stackWidget = QStackedWidget(self)
+
+        self.imgLabel = QLabel()
+        self.stackImageWidget = QPixmap('')
+        self.imgLabel.setPixmap(self.stackImageWidget)
+
+        self.stackWidget.addWidget(videoWidget)
+        self.stackWidget.addWidget(self.imgLabel)
+
+        layout.addWidget(self.stackWidget)
         layout.addLayout(controlLayout)
         layout.addLayout(hLayout)
         layout.addWidget(self.errorLabel)
@@ -168,18 +179,23 @@ class VideoWindow(QMainWindow):
 
         self.mediaPlayer.setMedia(
             QMediaContent(QUrl.fromLocalFile(metaFile.path)))
-        self.playButton.setEnabled(True)
 
         if type(metaFile) == VideoMetaData:
+            self.stackWidget.setCurrentIndex(0)
             self.mediaPlayer.setPosition(int(metaFile.timeStamp))
-        self.play()
+            self.playButton.setEnabled(True)
+            self.play()
+        else:
+            self.stackWidget.setCurrentIndex(1)
+            pixmap = QPixmap(metaFile.path)
+            pixmap = pixmap.scaled(880, 720)
+            self.imgLabel.setPixmap(pixmap)
+
+        self.setWindowTitle(metaFile.path)
 
         print("Image Pointer:", idx)
 
     def resizeEvent(self, event):
-        # self.sumImage = self.sumImage = self.sumImage.scaled(1600, 900, aspectRatioMode=Qt.KeepAspectRatio)
-        # self.imageWidget = QPixmap(self.sumImage)
-        # self.imageLabel.setPixmap(self.imageWidget)
         QMainWindow.resizeEvent(self, event)
 
     def openFile(self):
@@ -232,6 +248,5 @@ if __name__ == '__main__':
     loadMetData()
     app = QApplication(sys.argv)
     player = VideoWindow(None, summaryImgPath)
-    player.resize(640, 480)
     player.show()
     sys.exit(app.exec_())
